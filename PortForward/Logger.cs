@@ -12,8 +12,9 @@
     /// </summary>
     public partial class Logger
     {
-
-        public static void TraceLog(string msg) {
+        static object _lock = new object();
+        public static void TraceLog(string msg)
+        {
             // 写文件日志
             WriteFileLog(null, 99, msg, "");
         }
@@ -76,46 +77,49 @@
         /// <param name="log">日志</param>
         private static void WriteFileLog(string logType, int logLevel, string description, string stack)
         {
-            var root = Directory.GetCurrentDirectory();
-            string path = root + @"\Logs\";
-
-            path += DateTime.Now.ToString("yyyy-MM") + "/";
-            if (!Directory.Exists(path))
+            lock (_lock)
             {
-                Directory.CreateDirectory(path);
+                var root = Directory.GetCurrentDirectory();
+                string path = root + @"\Logs\";
+
+                path += DateTime.Now.ToString("yyyy-MM") + "/";
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+
+                path += "Log-" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
+
+                FileStream fs;
+
+                if (File.Exists(path))
+                {
+                    fs = new FileStream(path, FileMode.Append);
+                }
+                else
+                {
+                    fs = new FileStream(path, FileMode.OpenOrCreate);
+                }
+
+                StreamWriter sw = new StreamWriter(fs);
+
+                string content = logLevel.ToString();
+                content += " | " + logType;
+                content += " | " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss");
+                content += " | " + "";
+                content += " | " + "";
+                content += " | " + description;
+                sw.WriteLine(content);
+
+                if (!string.IsNullOrEmpty(stack))
+                {
+                    sw.WriteLine(stack);
+                }
+
+                sw.Flush();
+                sw.Close();
+                fs.Close();
             }
-
-            path += "Log-" + DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
-
-            FileStream fs;
-
-            if (File.Exists(path))
-            {
-                fs = new FileStream(path, FileMode.Append);
-            }
-            else
-            {
-                fs = new FileStream(path, FileMode.OpenOrCreate);
-            }
-
-            StreamWriter sw = new StreamWriter(fs);
-
-            string content = logLevel.ToString();
-            content += " | " + logType;
-            content += " | " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss");
-            content += " | " + "";
-            content += " | " + "";
-            content += " | " + description;
-            sw.WriteLine(content);
-
-            if (!string.IsNullOrEmpty(stack))
-            {
-                sw.WriteLine(stack);
-            }
-
-            sw.Flush();
-            sw.Close();
-            fs.Close();
         }
 
     }

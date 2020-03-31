@@ -20,6 +20,13 @@ namespace PortForward
                 });
                 x.RunAsLocalSystem();
 
+                x.StartAutomaticallyDelayed();
+
+                x.EnableServiceRecovery(r =>
+                {
+                    r.RestartService(1);
+                });
+
                 x.SetDescription("PortForward");
                 x.SetDisplayName("PortForward");
                 x.SetServiceName("PortForward");
